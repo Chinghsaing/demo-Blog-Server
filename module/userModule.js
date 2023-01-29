@@ -8,7 +8,7 @@ var userSchema = mongoose.Schema({
     avatar: String,
     follows: Number,
     like: Number,
-    article: Array
+    article: Array,
 })
 
 var model = mongoose.model('user', userSchema)

@@ -22,7 +22,7 @@ exports.reg = (req, res) => {
             userModel.find({ 'username': userInfo.username }, { 'username': 1, '_id': 0 }, (err, doc) => {
                 if (doc.length == 0) {
                     function UserCreate() {
-                        idModel.findOneAndUpdate({ user: 'name' }, { $inc: { id: 1 } }, { new: true }, (err, docs) => {
+                        idModel.findOneAndUpdate({ name: 'user' }, { $inc: { id: 1 } }, { new: true }, (err, docs) => {
                             userModel.create({ 'uid': docs.id, 'username': userInfo.username, 'password': userInfo.password, 'nametag': '', 'avatar': '', 'follows': 0, 'like': 0, 'article': [] })
                                 .then(() => {
                                     res.back(100, '注册成功!')

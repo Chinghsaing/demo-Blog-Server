@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors')
-const userRouter = require('./router/user')
+const useRouter = require('./router/router')
 const connect = require('./db/db')
 const app = express()
 
@@ -17,7 +17,7 @@ app.use(function (req, res, next) {
   })
 app.use(cors())
 app.use(express.urlencoded({ extended: false }))
-app.use('/api',userRouter)
+app.use('/api',useRouter)
 
 app.listen(80,()=>{
     console.log('服务器开启于http://127.0.0.1');
