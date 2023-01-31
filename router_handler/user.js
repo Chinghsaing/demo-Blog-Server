@@ -2,9 +2,9 @@ const userModel = require('../module/userModule')
 const idModel = require('../module/idsModule')
 
 exports.reg = (req, res) => {
-    let userReg = /^[a-zA-Z0-9]{6,12}$/
-    let pwsReg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,12}$/
-    let userInfo = req.body
+    const userReg = /^[a-zA-Z0-9]{6,12}$/
+    const pwsReg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,12}$/
+    const userInfo = req.body
     if (!userInfo.username || !userInfo.password || !userInfo.checkpassword) {
         return res.back(101, '用户名密码不能为空')
     }
@@ -45,7 +45,7 @@ exports.reg = (req, res) => {
 }
 
 exports.log = (req, res) => {
-    let userInfo = req.body
+    const userInfo = req.body
     if (!userInfo.username || !userInfo.password) {
         return res.back(101, '用户名密码不能为空')
     } else {

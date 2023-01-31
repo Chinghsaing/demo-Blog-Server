@@ -1,9 +1,9 @@
 const express = require('express')
 const cors = require('cors')
+const path = require('path')
 const useRouter = require('./router/router')
 const connect = require('./db/db')
 const app = express()
-
 connect()
 app.use(function (req, res, next) {
     res.back = function (code, err, data) {
@@ -17,6 +17,7 @@ app.use(function (req, res, next) {
   })
 app.use(cors())
 app.use(express.urlencoded({ extended: false }))
+app.use(express.static('public'))
 app.use('/api',useRouter)
 
 app.listen(80,()=>{
