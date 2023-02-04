@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const user = require('../module/userModule') 
 var artSchema = mongoose.Schema({
-
+    artId: Number,
     artImages: String,
     artTitle: String,
     artContent: String,

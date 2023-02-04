@@ -1,65 +1,78 @@
+const fs = require('fs')
 const userModel = require('../module/userModule')
-const idModel = require('../module/idsModule')
 
-exports.reg = (req, res) => {
-    const userReg = /^[a-zA-Z0-9]{6,12}$/
-    const pwsReg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,12}$/
-    const userInfo = req.body
-    if (!userInfo.username || !userInfo.password || !userInfo.checkpassword) {
-        return res.back(101, '用户名密码不能为空')
-    }
-    else {
-        if (!userReg.test(userInfo.username)) {
-            return res.back(104, '用户名不能包含中文和特殊字符!')
-        }
-        else if (!pwsReg.test(userInfo.password)) {
-            return res.back(105, '密码需要字母和数字组成!')
-        }
-        else if (userInfo.checkpassword !== userInfo.password) {
-            return res.back(106, '两次输入的密码不一致')
-        }
-        else {
-            userModel.find({ 'username': userInfo.username }, { 'username': 1, '_id': 0 }, (err, doc) => {
-                if (doc.length == 0) {
-                    function UserCreate() {
-                        idModel.findOneAndUpdate({ name: 'user' }, { $inc: { id: 1 } }, { new: true }, (err, docs) => {
-                            userModel.create({ 'uid': docs.id, 'username': userInfo.username, 'password': userInfo.password, 'nametag': '', 'avatar': '', 'follows': 0, 'like': 0, 'article': [] })
-                                .then(() => {
-                                    res.back(100, '注册成功!')
-                                })
-                                .catch((err) => res.back(102, '注册失败' + err))
-                        })
-                    }
-                    UserCreate()
-                }
-                else {
-                    if (doc[0].username == userInfo.username) {
-                        res.back(103, '用户名已经存在')
-                    } else {
-                        UserCreate()
-                    }
-                }
-            })
-        }
-    }
-}
-
-exports.log = (req, res) => {
-    const userInfo = req.body
-    if (!userInfo.username || !userInfo.password) {
-        return res.back(101, '用户名密码不能为空')
-    } else {
-        userModel.find({ 'username': userInfo.username }, {'_id': 0,'__v':0 }, (err, doc) => {
-            if (doc.length === 0) {
-                res.back(201, '用户名不存在！')
-            } else {
-                if (userInfo.password !== doc[0].password)
-                    res.back(202, '密码错误！')
-                else {
-                    res.back(200, '登录成功！',doc)
-                }
+exports.nicknameUpdate = (req, res) => {
+    async function handler() {
+        const info = req.body
+        const uid = req.auth.uid
+        const newNickname = info.newNickname
+        const nickReg = /^[\u4E00-\u9FA5A-Za-z0-9_]{1,12}$/
+        if (newNickname !== '') {
+            if(!nickReg.test(newNickname)){
+                return res.back(502,'昵称不能包括特殊符号，且长度须在2至8位!')
+            }else{
+                const user = await userModel.findOneAndUpdate({ 'uid': uid }, { $set: { 'nickname': newNickname } })
+                return res.back(500,'更改昵称成功!')
             }
-        })
+        }else{
+            return res.back(501,'昵称不能为空!')
+        }
     }
+    handler()
+}
+exports.tagUpdate = (req, res) => {
+    async function handler() {
+        const info = req.body
+        const uid = req.auth.uid
+        const newTag = info.newTag
+        const tagReg = /^.{1,16}$/
+        if (newTag !== '') {
+            if(!tagReg.test(newTag)){
+                return res.back(602,'签名长度须在1到16个字符!')
+            }else{
+                const user = await userModel.findOneAndUpdate({ 'uid': uid }, { $set: { 'nametag': newTag } })
+                return res.back(600,'更改签名成功!')
+            }
+        }else{
+            return res.back(601,'签名不能为空!')
+        }
+    }
+    handler()
 }
 
+
+exports.avatarUpdate = (req, res) => {
+    async function handler() {
+        const file = req.file
+        const fileType = file.mimetype
+        const fileSize = file.size
+        const userPost = req.auth
+        const user = await userModel.findOne({ 'username': userPost.username }, { 'uid': 1, 'avatar': 1 })
+        const baseURL = 'http://127.0.0.1/images/avatar/'
+        if (fileType !== 'image/jpeg') {
+            return res.back(401, '头像必须为JPG格式!')
+        } else if (fileSize / 1024 / 1024 / 1024 / 1024 / 1024 > 5) {
+            return res.back(402, '头像大小不能超过5MB!')
+        } else {
+            if (userPost.username !== '' || userPost.uid !== '') {
+                if (user) {
+                    if (Number(userPost.uid) === user.uid) {
+                        const extname = file.mimetype.split('/')[1]
+                        const newfilename = 'uid' + userPost.uid + '-' + userPost.username + '.' + extname
+                        const newAvatarUrl = baseURL + newfilename
+                        const avatar = await userModel.findOneAndUpdate({ 'uid': user.uid }, { $set: { 'avatar': newAvatarUrl } })
+                        fs.renameSync('./uploads/' + file.filename, './public/images/avatar/' + newfilename)
+                        return res.back(400, '头像上传成功！')
+                    } else {
+                        return res.back(405, 'id与用户不匹配!')
+                    }
+                } else {
+                    return res.back(404, '该用户不存在')
+                }
+            } else {
+                return res.back(403, '缺少用户名和id')
+            }
+        }
+    }
+    handler()
+}
