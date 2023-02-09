@@ -2,9 +2,9 @@ const express = require('express')
 const router = express.Router()
 const signHandler = require('../router_handler/sign')
 const artHandler = require('../router_handler/article')
-
+const cmtHandler = require('../router_handler/comment')
 router.post('/reg',signHandler.reg)
 router.post('/log',signHandler.log)
 router.get('/artlist',artHandler.artList)
-
+router.get('/cmtlist',cmtHandler.cmtList)
 module.exports = router

@@ -1,6 +1,6 @@
-const artModule = require('../module/artModule')
-const userModel = require('../module/userModule')
-const artidsModule = require('../module/artidsModule')
+const articleModule = require('../module/articleModule')
+const userModule = require('../module/userModule')
+const articleIdModule = require('../module/articleIdModule')
 const fs = require('fs')
 
 exports.artPost = (req, res) => {
@@ -8,19 +8,35 @@ exports.artPost = (req, res) => {
         const info = req.body
         const user = req.auth
         const file = req.file
+        const fileType = file.mimetype
+        const fileSize = file.size
         const baseURL = 'http://127.0.0.1/images/article/'
-        const extname = file.mimetype.split('/')[1]
-        const artidDoc = await artidsModule.findOneAndUpdate({ name: 'article' }, { $inc: { artid: 1 } }, { new: true })
-        const newfilename = 'articleID' + '-' + artidDoc.artid + '-' + user.uid + '-' + user.username + '.' + extname
-        const newAvatarUrl = baseURL + newfilename
-        fs.renameSync('./uploads/' + file.filename, './public/images/article/' + newfilename)
-        const userDoc = await userModel.findOne({ 'uid': user.uid })
-        artModule.create({
-            'artContent': info.articleContent, 'artId': artidDoc.artid, 'artImages': newAvatarUrl, 'artTitle': info.articleTitle, 'author': userDoc, 'date': info.articleDate
-        })
-        //将文章id添加到相应用户
-        const userChan = await userModel.findOneAndUpdate({ 'uid': user.uid }, { $push: { 'article': artidDoc.artid } })
-        res.back(300, '文章发布成功！')
+        if (info.articleTitle !== '' || articleContent !== '') {
+            if (file === undefined) {
+                return res.back(302, '请上传文章封面!')
+            } else {
+                if (fileType !== 'image/jpeg') {
+                    return res.back(303, '文章封面必须为JPG格式!')
+                } else if (fileSize / 1024 / 1024 / 1024 / 1024 / 1024 > 5) {
+                    return res.back(304, '文章封面大小不能超过5MB!')
+                } else {
+                    const extname = file.mimetype.split('/')[1] //拆分后缀名
+                    const artidDoc = await articleIdModule.findOneAndUpdate({ name: 'article' }, { $inc: { artid: 1 } }, { new: true }) //id自增
+                    const newfilename = 'articleID' + '-' + artidDoc.artid + '-' + user.uid + '-' + user.username + '.' + extname //封面命名
+                    const newAvatarUrl = baseURL + newfilename //封面URL
+                    fs.renameSync('./uploads/' + file.filename, './public/images/article/' + newfilename) //写入图片
+                    const userDoc = await userModule.findOne({ 'uid': user.uid }) //查询作者
+                    articleModule.create({
+                        'artContent': info.articleContent, 'artId': artidDoc.artid, 'artImages': newAvatarUrl, 'artTitle': info.articleTitle, 'author': userDoc, 'date': info.articleDate
+                    }) //添加文章
+                    //将文章id添加到相应用户
+                    const userChan = await userModule.findOneAndUpdate({ 'uid': user.uid }, { $push: { 'article': artidDoc.artid } })
+                    res.back(300, '文章发布成功!')
+                }
+            }
+        } else {
+            return res.back(301, '文章标题内容不能为空!')
+        }
     }
     handler()
 
@@ -28,7 +44,7 @@ exports.artPost = (req, res) => {
 
 exports.artList = (req, res) => {
     async function handler() {
-        const list = await artModule.find().populate('author', { 'password': 0, '_id': 0, '__v': 0 })
+        const list = await articleModule.find().populate('author', { 'password': 0, '_id': 0, '__v': 0 })
         res.send(list)
     }
     handler()

@@ -1,5 +1,5 @@
-const userModel = require('../module/userModule')
-const idModel = require('../module/idsModule')
+const userModule = require('../module/userModule')
+const userIdModule = require('../module/userIdModule')
 const jwt = require('jsonwebtoken')
 const secretKey = 'dev By HJX'
 exports.reg = (req, res) => {
@@ -20,24 +20,24 @@ exports.reg = (req, res) => {
             return res.back(106, '两次输入的密码不一致')
         }
         else {
-            userModel.find({ 'username': userInfo.username }, { 'username': 1, '_id': 0 }, (err, doc) => {
+            userModule.find({ 'username': userInfo.username }, { 'username': 1, '_id': 0 }, (err, doc) => {
                 if (doc.length == 0) {
                     function UserCreate() {
-                        idModel.findOneAndUpdate({ name: 'user' }, { $inc: { id: 1 } }, { new: true }, (err, docs) => {
-                            userModel.create({ 'uid': docs.id, 'username': userInfo.username, 'password': userInfo.password, 'nickname': userInfo.username, 'nametag': '从这里开始!', 'avatar': '', 'follows': 0, 'like': 0, 'article': [] })
+                        userIdModule.findOneAndUpdate({ name: 'user' }, { $inc: { id: 1 } }, { new: true }, (err, docs) => {
+                            userModule.create({ 'uid': docs.id, 'username': userInfo.username, 'password': userInfo.password, 'nickname': userInfo.username, 'nametag': '从这里开始!', 'avatar': '', 'follows': 0, 'like': 0, 'article': [] })
                                 .then(() => {
                                     res.back(100, '注册成功!')
                                 })
                                 .catch((err) => res.back(102, '注册失败' + err))
                         })
                     }
-                    UserCreate()
+                    return UserCreate()
                 }
                 else {
                     if (doc[0].username == userInfo.username) {
-                        res.back(103, '用户名已经存在')
+                        return res.back(103, '用户名已经存在')
                     } else {
-                        UserCreate()
+                        return UserCreate()
                     }
                 }
             })
@@ -50,18 +50,26 @@ exports.log = (req, res) => {
     if (!userInfo.username || !userInfo.password) {
         return res.back(101, '用户名密码不能为空')
     } else {
-        userModel.find({ 'username': userInfo.username }, { '_id': 0, '__v': 0 }, (err, doc) => {
+        userModule.find({ 'username': userInfo.username }, { '_id': 0, '__v': 0 }, (err, doc) => {
             if (doc.length === 0) {
-                res.back(201, '用户名不存在！')
+                return res.back(201, '用户名不存在!')
             } else {
                 if (userInfo.password !== doc[0].password)
-                    res.back(202, '密码错误！')
+                    return res.back(202, '密码错误!')
                 else {
-                    const tokenStr = 'Bearer ' + jwt.sign({ username: userInfo.username, uid: doc[0].uid }, secretKey, { expiresIn: '10m' })
-                    res.back(200, '登录成功！', doc, tokenStr)
+                    const tokenStr = 'Bearer ' + jwt.sign({ username: userInfo.username, uid: doc[0].uid }, secretKey, { expiresIn: '1d' })
+                    return res.back(200, '登录成功!', doc, tokenStr)
                 }
             }
         })
     }
+}
+exports.getUserInfo = (req, res) => {
+    async function handler() {
+        const user = req.auth
+        const userInfo = await userModule.findOne({ 'username': user.username }, { '_id': 0, 'article': 1, 'follows': 1, 'like': 1 })
+        res.send(userInfo)
+    }
+    handler()
 }
 
