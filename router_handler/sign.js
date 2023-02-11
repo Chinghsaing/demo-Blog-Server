@@ -73,3 +73,7 @@ exports.getUserInfo = (req, res) => {
     handler()
 }
 
+exports.authorized = (req, res) => {
+    return res.back(1, '1')
+}
+

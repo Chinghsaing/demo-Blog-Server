@@ -12,5 +12,8 @@ router.post('/nickname', userHandler.nicknameUpdate)
 router.post('/usertag', userHandler.tagUpdate)
 
 router.get('/getuser', signHandler.getUserInfo)
-router.post('/cmtpost',cmtHandler.cmtPost)
+router.post('/cmtpost', cmtHandler.cmtPost)
+router.post('/authorized', signHandler.authorized)
+router.get('/userarticle', userHandler.getUserArticle)
+router.post('/artdelete',artHandler.artDelete)
 module.exports = router

@@ -11,9 +11,9 @@ connect()
 app.use(function (req, res, next) {
     res.back = function (code, err, data, token) {
         res.send({
-            res_code: code,
-            res_message: err instanceof Error ? err.message : err,
-            res_data: data,
+            code: code,
+            message: err instanceof Error ? err.message : err,
+            data: data,
             token: token,
         })
     }

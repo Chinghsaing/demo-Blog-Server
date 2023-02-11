@@ -1,6 +1,7 @@
 const articleModule = require('../module/articleModule')
 const userModule = require('../module/userModule')
 const articleIdModule = require('../module/articleIdModule')
+const commentModule = require('../module/commentModule')
 const fs = require('fs')
 
 exports.artPost = (req, res) => {
@@ -46,6 +47,18 @@ exports.artList = (req, res) => {
     async function handler() {
         const list = await articleModule.find().populate('author', { 'password': 0, '_id': 0, '__v': 0 })
         res.send(list)
+    }
+    handler()
+}
+
+exports.artDelete = (req, res) => {
+    async function handler() {
+        const uid = req.auth.uid
+        const artId = req.body.artId
+        const artDel = await articleModule.deleteOne({ 'artId': artId })
+        const userArtDel = await userModule.findOneAndUpdate({ 'uid': uid }, { $pull: { 'article': Number(artId) } })
+        const artCmtDel = await commentModule.deleteMany({ 'artId': artId })
+        res.back(800, '删除文章成功!')
     }
     handler()
 }

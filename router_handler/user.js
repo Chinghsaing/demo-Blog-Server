@@ -1,5 +1,6 @@
 const fs = require('fs')
 const userModule = require('../module/userModule')
+const articleModule = require('../module/articleModule')
 
 exports.nicknameUpdate = (req, res) => {
     async function handler() {
@@ -61,6 +62,41 @@ exports.avatarUpdate = (req, res) => {
             fs.renameSync('./uploads/' + file.filename, './public/images/avatar/' + newfilename)
             return res.back(400, '头像上传成功!')
         }
+    }
+    handler()
+}
+
+exports.getUserArticle = (req, res) => {
+    async function handler() {
+        const uid = req.auth.uid
+        const user = await userModule.findOne({ 'uid': uid })
+        const userArticle = await userModule.aggregate([{
+            $lookup: {
+                from: 'articles',
+                localField: '_id',
+                foreignField: 'author',
+                as: 'list'
+            }
+        },
+        {
+            $match: {
+                uid: Number(uid)
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                list: {
+                    artId: 1,
+                    artImages: 1,
+                    artTitle: 1,
+                    artContent: 1,
+                    date: 1
+                }
+            }
+        }
+        ])
+    res.send(userArticle[0].list)
     }
     handler()
 }
