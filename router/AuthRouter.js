@@ -15,5 +15,6 @@ router.get('/getuser', signHandler.getUserInfo)
 router.post('/cmtpost', cmtHandler.cmtPost)
 router.post('/authorized', signHandler.authorized)
 router.get('/userarticle', userHandler.getUserArticle)
-router.post('/artdelete',artHandler.artDelete)
+router.post('/artdelete', artHandler.artDelete)
+router.post('/cmtreply', cmtHandler.cmtReply)
 module.exports = router

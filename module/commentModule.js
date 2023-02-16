@@ -16,17 +16,22 @@ var cmtSchema = mongoose.Schema({
     },
     user:
     {
-        type: mongoose.SchemaTypes.ObjectId, ref: 'user',
+        type: mongoose.SchemaTypes.ObjectId, 
+        ref: 'user',
         required: true
     },
     article: {
-        type: mongoose.SchemaTypes.ObjectId, ref: 'article',
+        type: mongoose.SchemaTypes.ObjectId, 
+        ref: 'article',
         required: true
     },
     date: {
         type: String,
         required: true
     },
+    replycmt:{
+        type: Array
+    }
 })
 
 var model = mongoose.model('comment', cmtSchema)

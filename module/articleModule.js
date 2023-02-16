@@ -18,7 +18,8 @@ var artSchema = mongoose.Schema({
         required: true
     },
     author: {
-        type: mongoose.SchemaTypes.ObjectId, ref: 'user',
+        type: mongoose.SchemaTypes.ObjectId, 
+        ref: 'user',
         required: true
     },
     date: {
