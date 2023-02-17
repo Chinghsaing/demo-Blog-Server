@@ -2,6 +2,7 @@ const articleModule = require('../module/articleModule')
 const userModule = require('../module/userModule')
 const articleIdModule = require('../module/articleIdModule')
 const commentModule = require('../module/commentModule')
+const imageIdModule = require('../module/imageIdModule')
 const fs = require('fs')
 
 exports.artPost = (req, res) => {
@@ -11,7 +12,6 @@ exports.artPost = (req, res) => {
         const file = req.file
         const fileType = file.mimetype
         const fileSize = file.size
-        const baseURL = 'http://127.0.0.1/images/article/'
         if (info.articleTitle !== '' || articleContent !== '') {
             if (file === undefined) {
                 return res.back(302, '请上传文章封面!')
@@ -23,15 +23,17 @@ exports.artPost = (req, res) => {
                 } else {
                     const extname = file.mimetype.split('/')[1] //拆分后缀名
                     const artidDoc = await articleIdModule.findOneAndUpdate({ name: 'article' }, { $inc: { artid: 1 } }, { new: true }) //id自增
-                    const newfilename = 'articleID' + '-' + artidDoc.artid + '-' + user.uid + '-' + user.username + '.' + extname //封面命名
-                    const newAvatarUrl = baseURL + newfilename //封面URL
-                    fs.renameSync('./uploads/' + file.filename, './public/images/article/' + newfilename) //写入图片
+                    const baseURL = 'http://127.0.0.1/images/article/articleID-' + artidDoc.artid + '/'
+                    const newfilename = 'article-Cover' + '.' + extname //封面命名
+                    const CoverUrl = baseURL + newfilename //封面URL
+                    fs.mkdir('./public/images/article/articleID-' + artidDoc.artid + '/', () => { }) //创建文章图片文件夹
+                    fs.renameSync('./uploads/' + file.filename, './public/images/article/articleID-' + artidDoc.artid + '/' + newfilename) //重命名图片
                     const userDoc = await userModule.findOne({ 'uid': user.uid }) //查询作者
-                    articleModule.create({
-                        'artContent': info.articleContent, 'artId': artidDoc.artid, 'artImages': newAvatarUrl, 'artTitle': info.articleTitle, 'author': userDoc, 'date': info.articleDate
+                    const addArt = await articleModule.create({
+                        'artContent': info.articleContent, 'artId': artidDoc.artid, 'artImages': CoverUrl, 'artTitle': info.articleTitle, 'author': userDoc, 'date': info.articleDate
                     }) //添加文章
-                    //将文章id添加到相应用户
-                    const userChan = await userModule.findOneAndUpdate({ 'uid': user.uid }, { $push: { 'article': artidDoc.artid } })
+                    const resetId = await imageIdModule.findOneAndUpdate({ name: 'image' }, { imageId: 0 }, { new: true })//reset image id
+                    const userChan = await userModule.findOneAndUpdate({ 'uid': user.uid }, { $push: { 'article': artidDoc.artid } })//将文章id添加到相应用户
                     res.back(300, '文章发布成功!')
                 }
             }
@@ -55,10 +57,28 @@ exports.artDelete = (req, res) => {
     async function handler() {
         const uid = req.auth.uid
         const artId = req.body.artId
+        const artidDoc = await articleIdModule.findOneAndUpdate({ name: 'article' }, { $inc: { artid: -1 } }, { new: true })
         const artDel = await articleModule.deleteOne({ 'artId': artId })
         const userArtDel = await userModule.findOneAndUpdate({ 'uid': uid }, { $pull: { 'article': Number(artId) } })
         const artCmtDel = await commentModule.deleteMany({ 'artId': artId })
         res.back(800, '删除文章成功!')
+    }
+    handler()
+}
+
+exports.artImg = (req, res) => {
+    async function handler() {
+        const files = req.files[0]
+        const extname = files.mimetype.split('/')[1] //拆分后缀名
+        const imageDoc = await imageIdModule.findOneAndUpdate({ name: 'image' }, { $inc: { imageId: 1 } }, { new: true })
+        const newfilename = 'article-' + imageDoc.imageId + '.' + extname //封面命名
+        const artidIncDoc = await articleIdModule.findOneAndUpdate({ name: 'article' }, { $inc: { artid: 1 } }, { new: true })
+        const baseURL = 'http://127.0.0.1/images/article/articleID-' + artidIncDoc.artid + '/'
+        const newImagesUrl = baseURL + newfilename
+        fs.mkdir('./public/images/article/articleID-' + artidIncDoc.artid + '/', () => { }) //创建文章图片文件夹
+        fs.renameSync('./uploads/' + files.filename, './public/images/article/articleID-' + artidIncDoc.artid + '/' + newfilename) //写入图片
+        const artiddecDoc = await articleIdModule.findOneAndUpdate({ name: 'article' }, { $inc: { artid: -1 } }, { new: true })
+        res.send(newImagesUrl)
     }
     handler()
 }

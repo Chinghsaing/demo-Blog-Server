@@ -46,23 +46,26 @@ exports.reg = (req, res) => {
 }
 
 exports.log = (req, res) => {
-    const userInfo = req.body
-    if (!userInfo.username || !userInfo.password) {
-        return res.back(101, '用户名密码不能为空')
-    } else {
-        userModule.find({ 'username': userInfo.username }, { '_id': 0, '__v': 0 }, (err, doc) => {
-            if (doc.length === 0) {
+    async function handler() {
+        const userInfo = req.body
+        if (!userInfo.username || !userInfo.password) {
+            return res.back(101, '用户名密码不能为空')
+        } else {
+            const userDoc = await userModule.findOne({ 'username': userInfo.username }, { '_id': 0, '__v': 0 })
+            if (userDoc.length === 0) {
                 return res.back(201, '用户名不存在!')
             } else {
-                if (userInfo.password !== doc[0].password)
+                if (userInfo.password !== userDoc.password)
                     return res.back(202, '密码错误!')
                 else {
-                    const tokenStr = 'Bearer ' + jwt.sign({ username: userInfo.username, uid: doc[0].uid }, secretKey, { expiresIn: '1d' })
+                    const tokenStr = 'Bearer ' + jwt.sign({ username: userInfo.username, uid: userDoc.uid }, secretKey, { expiresIn: '1d' })
+                    const doc = await userModule.findOne({ 'username': userInfo.username }, { '_id': 0, '__v': 0, 'password': 0 })
                     return res.back(200, '登录成功!', doc, tokenStr)
                 }
             }
-        })
+        }
     }
+    handler()
 }
 exports.getUserInfo = (req, res) => {
     async function handler() {
