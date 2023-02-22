@@ -1,6 +1,7 @@
 const fs = require('fs')
 const userModule = require('../module/userModule')
 const articleModule = require('../module/articleModule')
+const { baseURL } = require('../config/config')
 
 exports.nicknameUpdate = (req, res) => {
     async function handler() {
@@ -49,7 +50,7 @@ exports.avatarUpdate = (req, res) => {
         const fileSize = file.size
         const userPost = req.auth
         const user = await userModule.findOne({ 'username': userPost.username }, { 'uid': 1, 'avatar': 1 })
-        const baseURL = 'http://127.0.0.1/images/avatar/'
+        const fileURL = baseURL+'/images/avatar/'
         if (fileType !== 'image/jpeg') {
             return res.back(401, '头像必须为JPG格式!')
         } else if (fileSize / 1024 / 1024 / 1024 / 1024 / 1024 > 5) {
@@ -57,10 +58,10 @@ exports.avatarUpdate = (req, res) => {
         } else {
             const extname = file.mimetype.split('/')[1]
             const newfilename = 'uid' + userPost.uid + '-' + userPost.username + '.' + extname
-            const newAvatarUrl = baseURL + newfilename
+            const newAvatarUrl = fileURL + newfilename
             const avatar = await userModule.findOneAndUpdate({ 'uid': user.uid }, { $set: { 'avatar': newAvatarUrl } })
             fs.renameSync('./uploads/' + file.filename, './public/images/avatar/' + newfilename)
-            return res.back(400, '头像上传成功!')
+            return res.back(400, '头像上传成功!', newAvatarUrl)
         }
     }
     handler()

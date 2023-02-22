@@ -24,7 +24,7 @@ exports.reg = (req, res) => {
                 if (doc.length == 0) {
                     function UserCreate() {
                         userIdModule.findOneAndUpdate({ name: 'user' }, { $inc: { id: 1 } }, { new: true }, (err, docs) => {
-                            userModule.create({ 'uid': docs.id, 'username': userInfo.username, 'password': userInfo.password, 'nickname': userInfo.username, 'nametag': '从这里开始!', 'avatar': '', 'follows': 0, 'like': 0, 'article': [] })
+                            userModule.create({ 'uid': docs.id, 'username': userInfo.username, 'password': userInfo.password, 'nickname': userInfo.username, 'nametag': '从这里开始!', 'avatar': 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png', 'follows': 0, 'like': 0, 'article': [] })
                                 .then(() => {
                                     res.back(100, '注册成功!')
                                 })
@@ -52,7 +52,8 @@ exports.log = (req, res) => {
             return res.back(101, '用户名密码不能为空')
         } else {
             const userDoc = await userModule.findOne({ 'username': userInfo.username }, { '_id': 0, '__v': 0 })
-            if (userDoc.length === 0) {
+            if (userDoc === null) {
+                console.log(baseURL);
                 return res.back(201, '用户名不存在!')
             } else {
                 if (userInfo.password !== userDoc.password)

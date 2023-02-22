@@ -29,6 +29,6 @@ app.use((err, req, res, next) => {
     if (err.name === 'UnauthorizedError') return res.back(0, '登录无效或者过期!')
 })
 
-app.listen(80, () => {
+app.listen(3000, () => {
     console.log('服务器开启于http://127.0.0.1');
 })
