@@ -30,5 +30,5 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(3000, () => {
-    console.log('服务器开启于http://127.0.0.1');
+    console.log('服务器开启于http://127.0.0.1:3000');
 })
